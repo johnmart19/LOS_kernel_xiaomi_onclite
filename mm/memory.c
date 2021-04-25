@@ -135,7 +135,7 @@ static int __init init_zero_pfn(void)
 	zero_pfn = page_to_pfn(ZERO_PAGE(0));
 	return 0;
 }
-core_initcall(init_zero_pfn);
+early_initcall(init_zero_pfn);
 
 
 #if defined(SPLIT_RSS_COUNTING)
@@ -2230,6 +2230,10 @@ static int do_page_mkwrite(struct vm_area_struct *vma, struct page *page,
 	vmf.gfp_mask = __get_fault_gfp_mask(vma);
 	vmf.page = page;
 	vmf.cow_page = NULL;
+
+	if (vma->vm_file &&
+	    IS_SWAPFILE(vma->vm_file->f_mapping->host))
+		return VM_FAULT_SIGBUS;
 
 	ret = vma->vm_ops->page_mkwrite(vma, &vmf);
 	if (unlikely(ret & (VM_FAULT_ERROR | VM_FAULT_NOPAGE)))
